@@ -128,25 +128,23 @@ class GFW_Consent_Core {
 	}
 
 	/**
-	 * True when the current request is a page-builder / customizer / preview
-	 * context, or the current user has content-editing capability.
+	 * True when the current request is a page-builder editor, WP Customizer,
+	 * or a WP preview. Detected purely by request signals (query params /
+	 * customizer flag) — NOT by user capability. Logged-in admins viewing the
+	 * live frontend still see the banner so they can verify UX as visitors do.
 	 *
 	 * Used by the blocker (skip output-buffer rewrite) and the frontend
-	 * (skip banner render) so builders like Bricks, Elementor, Beaver, etc.
-	 * aren't disrupted by consent UI or script mangling while editing.
+	 * (skip banner render) only when the user is ACTIVELY inside a builder.
 	 */
 	public static function is_editor_context() {
-		if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
-			return true;
-		}
 		if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
 			return true;
 		}
 		if ( isset( $_GET['preview'] ) && 'true' === $_GET['preview'] ) {
 			return true;
 		}
-		// Known builder activation flags (defensive — builders normally require
-		// edit_posts, but some expose token-gated preview modes to logged-out reviewers).
+		// Builder activation query params — presence of any of these means the
+		// current request is the builder's edit iframe/page, not the live site.
 		$builder_flags = array( 'bricks', 'elementor-preview', 'fl_builder', 'ct_builder', 'et_fb', 'brizy-edit', 'brizy-edit-iframe', 'tve' );
 		foreach ( $builder_flags as $flag ) {
 			if ( isset( $_GET[ $flag ] ) ) {
