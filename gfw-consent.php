@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       FISHWINK Consent
- * Plugin URI:        https://github.com/gofishwink/gfw-consent
+ * Plugin URI:        https://github.com/fishwink/gfw-consent
  * Description:       Lightweight cookie consent for FISHWINK client sites. Blocks marketing scripts until consent, logs all consent for audit trail, auto-generates cookie policy, and supports Google Consent Mode v2 + Global Privacy Control.
  * Version:           1.0.7
  * Requires at least: 6.0
@@ -35,7 +35,7 @@ define( 'GFW_CONSENT_COOKIE', 'gfw_consent' );
 if ( file_exists( GFW_CONSENT_PATH . 'lib/plugin-update-checker/plugin-update-checker.php' ) ) {
 	require GFW_CONSENT_PATH . 'lib/plugin-update-checker/plugin-update-checker.php';
 	$gfw_consent_updater = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-		'https://github.com/gofishwink/gfw-consent/',
+		'https://github.com/fishwink/gfw-consent/',
 		__FILE__,
 		'gfw-consent'
 	);
