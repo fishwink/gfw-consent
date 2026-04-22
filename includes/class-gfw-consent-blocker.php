@@ -83,35 +83,10 @@ class GFW_Consent_Blocker {
 		// into inline <script> (which may carry URLs matching our blocklist).
 		// Also: logged-in editors/admins are the site owner — consent blocking
 		// targets anonymous visitors, not the person editing the site.
-		if ( self::is_editor_context() ) {
+		if ( GFW_Consent_Core::is_editor_context() ) {
 			return;
 		}
 		ob_start( array( $this, 'filter_output' ) );
-	}
-
-	/**
-	 * True when the current request is a page-builder / preview / customizer
-	 * context, or the current user has content-editing capability.
-	 */
-	private static function is_editor_context() {
-		if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
-			return true;
-		}
-		if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
-			return true;
-		}
-		if ( isset( $_GET['preview'] ) && 'true' === $_GET['preview'] ) {
-			return true;
-		}
-		// Known builder activation flags (defensive — builders normally require
-		// edit_posts, but some expose token-gated preview modes to logged-out reviewers).
-		$builder_flags = array( 'bricks', 'elementor-preview', 'fl_builder', 'ct_builder', 'et_fb', 'brizy-edit', 'brizy-edit-iframe', 'tve' );
-		foreach ( $builder_flags as $flag ) {
-			if ( isset( $_GET[ $flag ] ) ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/**

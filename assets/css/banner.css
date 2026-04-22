@@ -116,18 +116,26 @@
 	flex: 1 1 380px;
 	min-width: 0;
 }
-.gfw-consent__title {
+/* Title/body are h2/div inside #gfw-consent. Themes style `h2` globally —
+   prefix with the plugin's ID so our rules win without needing !important. */
+#gfw-consent .gfw-consent__title {
 	margin: 0 0 6px;
-	font-size: 16px;
+	font-size: 17px;
 	font-weight: 600;
-	color: var(--gfw-text, #1a1a1a);
+	font-family: inherit;
+	font-style: normal;
+	line-height: 1.3;
 	letter-spacing: -0.01em;
+	text-transform: none;
+	color: var(--gfw-text, #1a1a1a);
 }
-.gfw-consent__body {
+#gfw-consent .gfw-consent__body {
 	margin: 0 0 8px;
 	color: var(--gfw-text, #1a1a1a);
 	opacity: .78;
 	font-size: 14px;
+	font-family: inherit;
+	line-height: 1.5;
 }
 .gfw-consent__policy-link-wrap { margin: 0; }
 .gfw-consent__policy-link {
@@ -149,40 +157,44 @@
    BUTTONS
    -------------------------------------------------------------------------- */
 
-.gfw-consent__btn {
+/* Buttons are <button> inside #gfw-consent. Themes commonly force uppercase +
+   wide tracking on buttons; override explicitly for banner consistency. */
+#gfw-consent .gfw-consent__btn {
 	appearance: none;
 	border: 1.5px solid var(--gfw-border, #e5e5e5);
 	background: transparent;
 	color: var(--gfw-text, #1a1a1a);
 	border-radius: calc(var(--gfw-radius, 8px) - 2px);
-	padding: 10px 18px;
+	padding: 8px 14px;
 	font: inherit;
-	font-size: 14px;
+	font-size: 13px;
 	font-weight: 500;
+	text-transform: none;
+	letter-spacing: 0;
 	cursor: pointer;
 	transition: background-color .15s ease, border-color .15s ease, transform .1s ease, opacity .15s ease;
 	white-space: nowrap;
 	line-height: 1.2;
-	min-height: 42px;
+	min-height: 36px;
 }
-.gfw-consent__btn:hover {
+#gfw-consent .gfw-consent__btn:hover {
 	background: rgba(0, 0, 0, .04);
 	border-color: var(--gfw-text, #1a1a1a);
 }
-.gfw-consent__btn:active {
+#gfw-consent .gfw-consent__btn:active {
 	transform: translateY(1px);
 }
-.gfw-consent__btn:focus-visible {
+#gfw-consent .gfw-consent__btn:focus-visible {
 	outline: 2px solid var(--gfw-primary, #1a1a1a);
 	outline-offset: 2px;
 }
 
-.gfw-consent__btn--primary {
+#gfw-consent .gfw-consent__btn--primary {
 	background: var(--gfw-primary, #1a1a1a);
 	color: var(--gfw-primary-text, #fff);
 	border-color: var(--gfw-primary, #1a1a1a);
 }
-.gfw-consent__btn--primary:hover {
+#gfw-consent .gfw-consent__btn--primary:hover {
 	opacity: .92;
 	background: var(--gfw-primary, #1a1a1a);
 	border-color: var(--gfw-primary, #1a1a1a);
@@ -490,34 +502,40 @@
    POLICY PAGE — typography + table (theme-neutral, works on light/dark)
    -------------------------------------------------------------------------- */
 
-.gfw-consent-policy {
+/* Double-class selectors so our rules beat theme styling of h2/h3/h4/p/table.
+   Without this, themes with .content h2 { margin: 0 } nuke the vertical rhythm. */
+.gfw-consent-policy.gfw-consent-policy {
 	line-height: 1.6;
 }
-.gfw-consent-policy h2,
-.gfw-consent-policy h3,
-.gfw-consent-policy h4 {
+.gfw-consent-policy.gfw-consent-policy h2,
+.gfw-consent-policy.gfw-consent-policy h3,
+.gfw-consent-policy.gfw-consent-policy h4 {
 	line-height: 1.25;
+	font-family: inherit;
 }
-.gfw-consent-policy h2 {
+.gfw-consent-policy.gfw-consent-policy h2 {
 	margin: 0 0 .6em;
+	font-size: 1.75em;
 }
-.gfw-consent-policy h3 {
+.gfw-consent-policy.gfw-consent-policy h3 {
 	margin: 1.8em 0 .5em;
+	font-size: 1.3em;
 }
-.gfw-consent-policy h4 {
+.gfw-consent-policy.gfw-consent-policy h4 {
 	margin: 1.4em 0 .4em;
+	font-size: 1.08em;
 }
-.gfw-consent-policy p {
+.gfw-consent-policy.gfw-consent-policy p {
 	margin: 0 0 1em;
 }
-.gfw-consent-policy a {
+.gfw-consent-policy.gfw-consent-policy a {
 	color: var(--gfw-primary, currentColor);
 	text-decoration: underline;
 	text-underline-offset: 2px;
 }
 
 /* Reopen-preferences button inside the policy body */
-.gfw-consent-policy .gfw-consent-open-preferences {
+.gfw-consent-policy.gfw-consent-policy .gfw-consent-open-preferences {
 	display: inline-block;
 	background: var(--gfw-primary, #1a1a1a);
 	color: var(--gfw-primary-text, #fff);
@@ -525,40 +543,46 @@
 	border-radius: var(--gfw-radius, 8px);
 	padding: 10px 18px;
 	font: inherit;
+	font-size: 14px;
 	font-weight: 600;
+	text-transform: none;
+	letter-spacing: 0;
 	cursor: pointer;
 	text-decoration: none;
 	transition: transform .15s ease, box-shadow .15s ease;
 }
-.gfw-consent-policy .gfw-consent-open-preferences:hover {
+.gfw-consent-policy.gfw-consent-policy .gfw-consent-open-preferences:hover {
 	transform: translateY(-1px);
 	box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.25);
 }
 
-/* Services table — neutral rgba so it reads on both light AND dark themes */
-.gfw-consent-policy-table {
+/* Services table — neutral rgba so it reads on both light AND dark themes.
+   Nested under .gfw-consent-policy so theme rules on `table` can't win. */
+.gfw-consent-policy.gfw-consent-policy .gfw-consent-policy-table {
 	width: 100%;
 	border-collapse: collapse;
 	margin: 1em 0 1.75em;
 	font-size: 0.95em;
 	border: 1px solid rgba(128, 128, 128, 0.28);
 }
-.gfw-consent-policy-table th,
-.gfw-consent-policy-table td {
+.gfw-consent-policy.gfw-consent-policy .gfw-consent-policy-table th,
+.gfw-consent-policy.gfw-consent-policy .gfw-consent-policy-table td {
 	border: 1px solid rgba(128, 128, 128, 0.22);
 	padding: 10px 12px;
 	text-align: left;
 	vertical-align: top;
 	color: inherit;
+	font-size: 1em;
+	line-height: 1.45;
 }
-.gfw-consent-policy-table thead th {
+.gfw-consent-policy.gfw-consent-policy .gfw-consent-policy-table thead th {
 	background: rgba(128, 128, 128, 0.14);
 	font-weight: 600;
 }
-.gfw-consent-policy-table tbody tr:nth-child(even) td {
+.gfw-consent-policy.gfw-consent-policy .gfw-consent-policy-table tbody tr:nth-child(even) td {
 	background: rgba(128, 128, 128, 0.05);
 }
-.gfw-consent-policy-meta {
+.gfw-consent-policy.gfw-consent-policy .gfw-consent-policy-meta {
 	opacity: .65;
 	font-size: .9em;
 	margin-top: 2em;
@@ -566,7 +590,7 @@
 
 /* Narrow screens: scroll the wide table horizontally instead of squishing */
 @media (max-width: 640px) {
-	.gfw-consent-policy-table {
+	.gfw-consent-policy.gfw-consent-policy .gfw-consent-policy-table {
 		display: block;
 		overflow-x: auto;
 		-webkit-overflow-scrolling: touch;
@@ -586,9 +610,10 @@
 		width: 100%;
 		justify-content: stretch;
 	}
-	.gfw-consent__btn {
+	#gfw-consent .gfw-consent__btn {
 		flex: 1 1 auto;
-		padding: 11px 14px;
+		padding: 10px 14px;
+		min-height: 40px;
 	}
 	.gfw-consent[data-layout="bar"] .gfw-consent__banner,
 	.gfw-consent[data-position="bottom"] .gfw-consent__banner {
@@ -601,7 +626,7 @@
 	.gfw-consent__modal-footer {
 		flex-direction: column-reverse;
 	}
-	.gfw-consent__modal-footer .gfw-consent__btn {
+	#gfw-consent .gfw-consent__modal-footer .gfw-consent__btn {
 		width: 100%;
 	}
 	.gfw-consent__fab {

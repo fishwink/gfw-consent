@@ -87,6 +87,9 @@ class GFW_Consent_Frontend {
 	 * is never loaded (harmless if not).
 	 */
 	public function consent_mode_defaults() {
+		if ( GFW_Consent_Core::is_editor_context() ) {
+			return;
+		}
 		if ( ! GFW_Consent_Core::get_setting( 'consent_mode_v2', 1 ) ) {
 			return;
 		}
@@ -116,6 +119,9 @@ class GFW_Consent_Frontend {
 	 * before external CSS loads (no flash of unbranded banner).
 	 */
 	public function inline_css_vars() {
+		if ( GFW_Consent_Core::is_editor_context() ) {
+			return;
+		}
 		$s = get_option( GFW_CONSENT_OPT_KEY, array() );
 		$vars = array(
 			'--gfw-primary'         => isset( $s['brand_primary'] ) ? $s['brand_primary'] : '#1a1a1a',
@@ -137,6 +143,9 @@ class GFW_Consent_Frontend {
 	}
 
 	public function enqueue_assets() {
+		if ( GFW_Consent_Core::is_editor_context() ) {
+			return;
+		}
 		// If no non-essential categories are enabled, no banner will render —
 		// skip the CSS/JS entirely.
 		if ( ! self::has_non_essential_categories() ) {
@@ -237,6 +246,9 @@ class GFW_Consent_Frontend {
 	}
 
 	public function render_banner() {
+		if ( GFW_Consent_Core::is_editor_context() ) {
+			return;
+		}
 		// Suppress banner entirely if no non-essential categories are enabled.
 		// Essential-only sites don't need consent under GDPR/CCPA, and showing
 		// a banner for nothing misleads users about what the site actually does.

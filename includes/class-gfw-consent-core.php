@@ -126,4 +126,33 @@ class GFW_Consent_Core {
 		$opts = get_option( GFW_CONSENT_OPT_KEY, array() );
 		return isset( $opts[ $key ] ) ? $opts[ $key ] : $default;
 	}
+
+	/**
+	 * True when the current request is a page-builder / customizer / preview
+	 * context, or the current user has content-editing capability.
+	 *
+	 * Used by the blocker (skip output-buffer rewrite) and the frontend
+	 * (skip banner render) so builders like Bricks, Elementor, Beaver, etc.
+	 * aren't disrupted by consent UI or script mangling while editing.
+	 */
+	public static function is_editor_context() {
+		if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+			return true;
+		}
+		if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
+			return true;
+		}
+		if ( isset( $_GET['preview'] ) && 'true' === $_GET['preview'] ) {
+			return true;
+		}
+		// Known builder activation flags (defensive — builders normally require
+		// edit_posts, but some expose token-gated preview modes to logged-out reviewers).
+		$builder_flags = array( 'bricks', 'elementor-preview', 'fl_builder', 'ct_builder', 'et_fb', 'brizy-edit', 'brizy-edit-iframe', 'tve' );
+		foreach ( $builder_flags as $flag ) {
+			if ( isset( $_GET[ $flag ] ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
