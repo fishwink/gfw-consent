@@ -38,6 +38,17 @@ class GFW_Consent_Policy {
 		$contact  = GFW_Consent_Core::get_setting( 'company_contact', get_option( 'admin_email' ) );
 		$last     = get_option( 'gfw_consent_last_scan', '' );
 
+		// Always include custom services in the policy — the admin explicitly
+		// added them, so they should render even before the next daily scan
+		// detects them on-site. Slug prefix `custom_` is our marker (see services class).
+		$custom_slugs = array();
+		foreach ( $catalog as $slug => $svc ) {
+			if ( 0 === strpos( (string) $slug, 'custom_' ) ) {
+				$custom_slugs[] = $slug;
+			}
+		}
+		$services = array_values( array_unique( array_merge( (array) $services, $custom_slugs ) ) );
+
 		ob_start();
 		?>
 		<div class="gfw-consent-policy">

@@ -108,6 +108,13 @@ class GFW_Consent_Admin {
 			),
 		);
 
+		// Custom services tab writes to its own dedicated option; main option
+		// is returned unchanged (WP still saves it, but as a no-op).
+		if ( 'custom-services' === $tab ) {
+			$this->save_custom_services( isset( $input['custom_services'] ) ? $input['custom_services'] : array() );
+			return $clean;
+		}
+
 		if ( ! isset( $tab_fields[ $tab ] ) ) {
 			// Unknown / missing tab marker — return state unchanged
 			return $clean;
@@ -220,11 +227,12 @@ class GFW_Consent_Admin {
 			<nav class="gfw-tabs">
 				<?php
 				$tabs = array(
-					'settings' => array( __( 'Settings', 'gfw-consent' ), 'sliders' ),
-					'branding' => array( __( 'Branding', 'gfw-consent' ), 'droplet' ),
-					'services' => array( __( 'Services', 'gfw-consent' ), 'radar' ),
-					'logs'     => array( __( 'Consent Log', 'gfw-consent' ), 'list' ),
-					'policy'   => array( __( 'Policy', 'gfw-consent' ), 'shield' ),
+					'settings'        => array( __( 'Settings', 'gfw-consent' ), 'sliders' ),
+					'branding'        => array( __( 'Branding', 'gfw-consent' ), 'droplet' ),
+					'services'        => array( __( 'Services', 'gfw-consent' ), 'radar' ),
+					'custom-services' => array( __( 'Custom services', 'gfw-consent' ), 'plus' ),
+					'logs'            => array( __( 'Consent Log', 'gfw-consent' ), 'list' ),
+					'policy'          => array( __( 'Policy', 'gfw-consent' ), 'shield' ),
 				);
 				foreach ( $tabs as $k => $meta ) {
 					$active = $tab === $k ? ' is-active' : '';
@@ -242,11 +250,12 @@ class GFW_Consent_Admin {
 			<div class="gfw-content">
 			<?php
 			switch ( $tab ) {
-				case 'branding': $this->tab_branding(); break;
-				case 'services': $this->tab_services(); break;
-				case 'logs':     $this->tab_logs();     break;
-				case 'policy':   $this->tab_policy();   break;
-				default:         $this->tab_settings();
+				case 'branding':        $this->tab_branding();        break;
+				case 'services':        $this->tab_services();        break;
+				case 'custom-services': $this->tab_custom_services(); break;
+				case 'logs':            $this->tab_logs();            break;
+				case 'policy':          $this->tab_policy();          break;
+				default:                $this->tab_settings();
 			}
 			?>
 			</div>
@@ -633,6 +642,174 @@ class GFW_Consent_Admin {
 			</tbody>
 		</table>
 		<?php
+	}
+
+	private function tab_custom_services() {
+		$custom = get_option( GFW_CONSENT_CUSTOM_KEY, array() );
+		if ( ! is_array( $custom ) ) {
+			$custom = array();
+		}
+		?>
+		<form method="post" action="options.php" class="gfw-admin-form">
+			<?php settings_fields( 'gfw_consent_group' ); ?>
+			<input type="hidden" name="<?php echo esc_attr( GFW_CONSENT_OPT_KEY ); ?>[_gfw_tab]" value="custom-services">
+
+			<div class="gfw-form-intro">
+				<h2><?php esc_html_e( 'Custom services', 'gfw-consent' ); ?></h2>
+				<p class="description">
+					<?php esc_html_e( 'Add trackers that aren\'t in the built-in catalog. Entries here are blocked until consent and appear in the auto-generated Cookie Policy like any other service. Built-in services always take priority if a slug collides.', 'gfw-consent' ); ?>
+				</p>
+			</div>
+
+			<div id="gfw-custom-services-list">
+				<?php
+				foreach ( $custom as $i => $svc ) {
+					$this->render_custom_service_row( (string) $i, $svc );
+				}
+				// Always render one blank row for quick first-time use.
+				$this->render_custom_service_row( 'new_' . count( $custom ), array() );
+				?>
+			</div>
+
+			<p class="gfw-custom-actions">
+				<button type="button" class="button" id="gfw-add-custom-service">
+					<?php esc_html_e( '+ Add another custom service', 'gfw-consent' ); ?>
+				</button>
+			</p>
+
+			<?php submit_button(); ?>
+		</form>
+
+		<template id="gfw-custom-service-template">
+			<?php $this->render_custom_service_row( '__INDEX__', array() ); ?>
+		</template>
+		<?php
+	}
+
+	private function render_custom_service_row( $index, $svc ) {
+		$prefix    = esc_attr( GFW_CONSENT_OPT_KEY ) . '[custom_services][' . esc_attr( $index ) . ']';
+		$name      = isset( $svc['name'] ) ? $svc['name'] : '';
+		$vendor    = isset( $svc['vendor'] ) ? $svc['vendor'] : '';
+		$category  = isset( $svc['category'] ) ? $svc['category'] : 'analytics';
+		$patterns  = ( isset( $svc['patterns'] ) && is_array( $svc['patterns'] ) ) ? implode( "\n", $svc['patterns'] ) : '';
+		$cookies   = ( isset( $svc['cookies'] ) && is_array( $svc['cookies'] ) ) ? implode( ', ', $svc['cookies'] ) : '';
+		$privacy   = isset( $svc['privacy'] ) ? $svc['privacy'] : '';
+		$purpose   = isset( $svc['purpose'] ) ? $svc['purpose'] : '';
+		$retention = isset( $svc['retention'] ) ? $svc['retention'] : '';
+		?>
+		<fieldset class="gfw-custom-svc" data-index="<?php echo esc_attr( $index ); ?>">
+			<div class="gfw-custom-svc-head">
+				<strong><?php esc_html_e( 'Custom service', 'gfw-consent' ); ?></strong>
+				<button type="button" class="gfw-custom-svc-remove">
+					&times; <?php esc_html_e( 'Remove', 'gfw-consent' ); ?>
+				</button>
+			</div>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label><?php esc_html_e( 'Name', 'gfw-consent' ); ?></label></th>
+					<td><input type="text" name="<?php echo $prefix; ?>[name]" value="<?php echo esc_attr( $name ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'e.g., Niche Tracker', 'gfw-consent' ); ?>"></td>
+				</tr>
+				<tr>
+					<th scope="row"><label><?php esc_html_e( 'Vendor', 'gfw-consent' ); ?></label></th>
+					<td><input type="text" name="<?php echo $prefix; ?>[vendor]" value="<?php echo esc_attr( $vendor ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'e.g., Niche Inc.', 'gfw-consent' ); ?>"></td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Category', 'gfw-consent' ); ?></th>
+					<td>
+						<select name="<?php echo $prefix; ?>[category]">
+							<option value="functional" <?php selected( $category, 'functional' ); ?>><?php esc_html_e( 'Functional', 'gfw-consent' ); ?></option>
+							<option value="analytics"  <?php selected( $category, 'analytics'  ); ?>><?php esc_html_e( 'Analytics', 'gfw-consent' ); ?></option>
+							<option value="marketing"  <?php selected( $category, 'marketing'  ); ?>><?php esc_html_e( 'Marketing', 'gfw-consent' ); ?></option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label><?php esc_html_e( 'Patterns', 'gfw-consent' ); ?></label></th>
+					<td>
+						<textarea name="<?php echo $prefix; ?>[patterns]" rows="3" class="large-text code" placeholder="cdn.niche.com/track.js&#10;niche.com/pixel"><?php echo esc_textarea( $patterns ); ?></textarea>
+						<p class="description"><?php esc_html_e( 'One pattern per line. Case-insensitive substring match against script URLs and inline script bodies. Leave blank to drop this entry on save.', 'gfw-consent' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label><?php esc_html_e( 'Cookie names', 'gfw-consent' ); ?></label></th>
+					<td><input type="text" name="<?php echo $prefix; ?>[cookies]" value="<?php echo esc_attr( $cookies ); ?>" class="regular-text" placeholder="_niche, _niche_sid"></td>
+				</tr>
+				<tr>
+					<th scope="row"><label><?php esc_html_e( 'Privacy URL', 'gfw-consent' ); ?></label></th>
+					<td><input type="url" name="<?php echo $prefix; ?>[privacy]" value="<?php echo esc_url( $privacy ); ?>" class="regular-text" placeholder="https://example.com/privacy"></td>
+				</tr>
+				<tr>
+					<th scope="row"><label><?php esc_html_e( 'Purpose', 'gfw-consent' ); ?></label></th>
+					<td><textarea name="<?php echo $prefix; ?>[purpose]" rows="2" class="large-text" placeholder="<?php esc_attr_e( 'Short plain-English description for the cookie policy.', 'gfw-consent' ); ?>"><?php echo esc_textarea( $purpose ); ?></textarea></td>
+				</tr>
+				<tr>
+					<th scope="row"><label><?php esc_html_e( 'Retention', 'gfw-consent' ); ?></label></th>
+					<td><input type="text" name="<?php echo $prefix; ?>[retention]" value="<?php echo esc_attr( $retention ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'e.g., Up to 1 year', 'gfw-consent' ); ?>"></td>
+				</tr>
+			</table>
+		</fieldset>
+		<?php
+	}
+
+	/**
+	 * Sanitize the posted custom_services payload and write to the dedicated
+	 * wp_option. Entries with no patterns are dropped silently. Slug is
+	 * auto-generated from the name (or first pattern if name is blank) to
+	 * keep URLs / lookups stable and prevent collision with built-ins.
+	 */
+	private function save_custom_services( $raw ) {
+		$allowed_cats = array( 'functional', 'analytics', 'marketing' );
+		$clean        = array();
+
+		if ( ! is_array( $raw ) ) {
+			$raw = array();
+		}
+
+		foreach ( $raw as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+
+			$patterns_raw = isset( $entry['patterns'] ) ? (string) $entry['patterns'] : '';
+			$patterns     = array_values( array_filter( array_map( 'trim', preg_split( '/\r\n|\r|\n/', $patterns_raw ) ) ) );
+			if ( empty( $patterns ) ) {
+				continue; // drop empty rows silently
+			}
+
+			$name = isset( $entry['name'] ) ? sanitize_text_field( $entry['name'] ) : '';
+			if ( '' === $name ) {
+				$name = $patterns[0]; // fallback — so the policy page never shows a blank row
+			}
+
+			$category = ( isset( $entry['category'] ) && in_array( $entry['category'], $allowed_cats, true ) )
+				? $entry['category']
+				: 'analytics';
+
+			$cookies_raw = isset( $entry['cookies'] ) ? (string) $entry['cookies'] : '';
+			$cookies     = array_values( array_filter( array_map( 'trim', explode( ',', $cookies_raw ) ) ) );
+
+			$slug = 'custom_' . sanitize_title( $name );
+
+			$clean[] = array(
+				'slug'      => $slug,
+				'name'      => $name,
+				'vendor'    => isset( $entry['vendor'] ) ? sanitize_text_field( $entry['vendor'] ) : '',
+				'category'  => $category,
+				'patterns'  => array_values( array_unique( $patterns ) ),
+				'cookies'   => array_values( array_unique( $cookies ) ),
+				'privacy'   => isset( $entry['privacy'] ) ? esc_url_raw( $entry['privacy'] ) : '',
+				'purpose'   => isset( $entry['purpose'] ) ? sanitize_textarea_field( $entry['purpose'] ) : '',
+				'retention' => isset( $entry['retention'] ) ? sanitize_text_field( $entry['retention'] ) : '',
+			);
+		}
+
+		// De-dupe by slug, last write wins.
+		$by_slug = array();
+		foreach ( $clean as $c ) {
+			$by_slug[ $c['slug'] ] = $c;
+		}
+
+		update_option( GFW_CONSENT_CUSTOM_KEY, array_values( $by_slug ) );
 	}
 
 	private function tab_logs() {

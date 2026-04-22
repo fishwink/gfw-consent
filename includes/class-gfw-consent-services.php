@@ -22,7 +22,45 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class GFW_Consent_Services {
 
+	/**
+	 * Full service catalog = built-in registry + per-site custom services
+	 * (managed via the "Custom services" admin tab) + optional filter.
+	 *
+	 * Built-in slugs always win on collision — we use `+` (not array_merge)
+	 * to preserve left-hand keys. Custom entries missing patterns or slug
+	 * are dropped during normalization.
+	 */
 	public static function catalog() {
+		$merged = self::built_in() + self::normalize_custom( get_option( GFW_CONSENT_CUSTOM_KEY, array() ) );
+		return apply_filters( 'gfw_consent_services_catalog', $merged );
+	}
+
+	/**
+	 * Normalize the stored custom-services list (flat indexed array) into
+	 * the slug=>entry map that the rest of the plugin expects. Entries
+	 * missing a slug or patterns are silently dropped.
+	 */
+	private static function normalize_custom( $raw ) {
+		$out = array();
+		if ( ! is_array( $raw ) ) {
+			return $out;
+		}
+		foreach ( $raw as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			if ( empty( $entry['slug'] ) || empty( $entry['patterns'] ) ) {
+				continue;
+			}
+			$out[ $entry['slug'] ] = $entry;
+		}
+		return $out;
+	}
+
+	/**
+	 * Built-in service registry. Add new well-known services here.
+	 */
+	private static function built_in() {
 		return array(
 
 			// ---------------------------------------------------------------

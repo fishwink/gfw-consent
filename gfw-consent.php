@@ -3,7 +3,7 @@
  * Plugin Name:       FISHWINK Consent
  * Plugin URI:        https://github.com/fishwink/gfw-consent
  * Description:       Lightweight cookie consent for FISHWINK client sites. Blocks marketing scripts until consent, logs all consent for audit trail, auto-generates cookie policy, and supports Google Consent Mode v2 + Global Privacy Control.
- * Version:           1.0.12
+ * Version:           1.0.13
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            FISHWINK
@@ -18,13 +18,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GFW_CONSENT_VERSION', '1.0.12' );
+define( 'GFW_CONSENT_VERSION', '1.0.13' );
 define( 'GFW_CONSENT_FILE', __FILE__ );
 define( 'GFW_CONSENT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GFW_CONSENT_URL', plugin_dir_url( __FILE__ ) );
 define( 'GFW_CONSENT_BASENAME', plugin_basename( __FILE__ ) );
 define( 'GFW_CONSENT_OPT_KEY', 'gfw_consent_settings' );
 define( 'GFW_CONSENT_SERVICES_KEY', 'gfw_consent_services' );
+define( 'GFW_CONSENT_CUSTOM_KEY', 'gfw_consent_custom_services' );
 define( 'GFW_CONSENT_COOKIE', 'gfw_consent' );
 
 /**

@@ -160,5 +160,38 @@
 			return lum > 0.55 ? '#000000' : '#ffffff';
 		}
 
+		/* ------------------------------------------------------------------
+		 * Custom services tab — Add / Remove fieldset rows.
+		 * Server re-indexes on save, so JS-added rows just need a unique
+		 * name-attribute placeholder (any string) to avoid collision.
+		 * ------------------------------------------------------------------ */
+		(function () {
+			var list     = document.getElementById('gfw-custom-services-list');
+			var template = document.getElementById('gfw-custom-service-template');
+			var addBtn   = document.getElementById('gfw-add-custom-service');
+			if (!list || !template || !addBtn) return;
+
+			addBtn.addEventListener('click', function () {
+				var uniq = 'new_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+				var html = template.innerHTML.replace(/__INDEX__/g, uniq);
+				var wrap = document.createElement('div');
+				wrap.innerHTML = html.trim();
+				var node = wrap.querySelector('.gfw-custom-svc');
+				if (node) {
+					list.appendChild(node);
+					var firstInput = node.querySelector('input[type="text"]');
+					if (firstInput) firstInput.focus();
+				}
+			});
+
+			list.addEventListener('click', function (e) {
+				var btn = e.target.closest('.gfw-custom-svc-remove');
+				if (!btn) return;
+				e.preventDefault();
+				var field = btn.closest('.gfw-custom-svc');
+				if (field) field.remove();
+			});
+		})();
+
 	});
 })(jQuery);

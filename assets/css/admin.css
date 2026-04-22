@@ -962,3 +962,66 @@
 		position: static;
 	}
 }
+
+/* --------------------------------------------------------------------------
+   CUSTOM SERVICES TAB
+   -------------------------------------------------------------------------- */
+
+.gfw-consent-wrap .gfw-custom-svc {
+	border: 1px solid var(--gfw-admin-border);
+	border-radius: 10px;
+	padding: 14px 20px 4px;
+	margin: 0 0 16px;
+	background: #fafbfc;
+}
+.gfw-consent-wrap .gfw-custom-svc-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0 0 6px;
+	margin: 0 0 4px;
+	border-bottom: 1px solid var(--gfw-admin-border);
+}
+.gfw-consent-wrap .gfw-custom-svc-head strong {
+	font-size: 13px;
+	letter-spacing: .02em;
+	text-transform: uppercase;
+	color: var(--gfw-admin-muted);
+}
+.gfw-consent-wrap .gfw-custom-svc-remove {
+	background: transparent;
+	border: 0;
+	color: #b91c1c;
+	cursor: pointer;
+	font-size: 13px;
+	padding: 4px 8px;
+	border-radius: 6px;
+}
+.gfw-consent-wrap .gfw-custom-svc-remove:hover {
+	background: rgba(185, 28, 28, 0.08);
+	text-decoration: none;
+}
+.gfw-consent-wrap .gfw-custom-svc .form-table {
+	margin: 0;
+}
+.gfw-consent-wrap .gfw-custom-svc .form-table tr {
+	border-bottom: 0;
+}
+.gfw-consent-wrap .gfw-custom-svc .form-table th {
+	padding: 10px 20px 10px 0;
+	width: 160px;
+}
+.gfw-consent-wrap .gfw-custom-svc .form-table td {
+	padding: 10px 0;
+}
+.gfw-consent-wrap .gfw-form-intro h2 {
+	margin: 0 0 4px;
+	font-size: 18px;
+}
+.gfw-consent-wrap .gfw-form-intro p.description {
+	margin: 0 0 20px;
+	max-width: 780px;
+}
+.gfw-consent-wrap .gfw-custom-actions {
+	margin: 8px 0 20px;
+}
