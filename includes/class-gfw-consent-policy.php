@@ -55,7 +55,7 @@ class GFW_Consent_Policy {
 
 			<h3><?php esc_html_e( 'Your consent', 'gfw-consent' ); ?></h3>
 			<p><?php esc_html_e( 'When you first visit this website, you are presented with a consent banner. You may accept all cookies, reject non-essential cookies, or choose specific categories. You can change your preferences at any time using the button below.', 'gfw-consent' ); ?></p>
-			<p>[gfw_consent_preferences label="<?php esc_attr_e( 'Change my cookie preferences', 'gfw-consent' ); ?>"]</p>
+			<p><?php echo $this->shortcode_preferences( array( 'label' => __( 'Change my cookie preferences', 'gfw-consent' ) ) ); ?></p>
 
 			<h3><?php esc_html_e( 'Categories of cookies we use', 'gfw-consent' ); ?></h3>
 

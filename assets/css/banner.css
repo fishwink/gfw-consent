@@ -487,23 +487,91 @@
 }
 
 /* --------------------------------------------------------------------------
-   POLICY PAGE TABLE
+   POLICY PAGE — typography + table (theme-neutral, works on light/dark)
    -------------------------------------------------------------------------- */
 
+.gfw-consent-policy {
+	line-height: 1.6;
+}
+.gfw-consent-policy h2,
+.gfw-consent-policy h3,
+.gfw-consent-policy h4 {
+	line-height: 1.25;
+}
+.gfw-consent-policy h2 {
+	margin: 0 0 .6em;
+}
+.gfw-consent-policy h3 {
+	margin: 1.8em 0 .5em;
+}
+.gfw-consent-policy h4 {
+	margin: 1.4em 0 .4em;
+}
+.gfw-consent-policy p {
+	margin: 0 0 1em;
+}
+.gfw-consent-policy a {
+	color: var(--gfw-primary, currentColor);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+/* Reopen-preferences button inside the policy body */
+.gfw-consent-policy .gfw-consent-open-preferences {
+	display: inline-block;
+	background: var(--gfw-primary, #1a1a1a);
+	color: var(--gfw-primary-text, #fff);
+	border: 0;
+	border-radius: var(--gfw-radius, 8px);
+	padding: 10px 18px;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	text-decoration: none;
+	transition: transform .15s ease, box-shadow .15s ease;
+}
+.gfw-consent-policy .gfw-consent-open-preferences:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.25);
+}
+
+/* Services table — neutral rgba so it reads on both light AND dark themes */
 .gfw-consent-policy-table {
 	width: 100%;
 	border-collapse: collapse;
-	margin: 12px 0 20px;
-	font-size: 14px;
+	margin: 1em 0 1.75em;
+	font-size: 0.95em;
+	border: 1px solid rgba(128, 128, 128, 0.28);
 }
 .gfw-consent-policy-table th,
 .gfw-consent-policy-table td {
-	border: 1px solid #e5e5e5;
-	padding: 8px 10px;
+	border: 1px solid rgba(128, 128, 128, 0.22);
+	padding: 10px 12px;
 	text-align: left;
 	vertical-align: top;
+	color: inherit;
 }
-.gfw-consent-policy-table th { background: #f8f8f8; }
+.gfw-consent-policy-table thead th {
+	background: rgba(128, 128, 128, 0.14);
+	font-weight: 600;
+}
+.gfw-consent-policy-table tbody tr:nth-child(even) td {
+	background: rgba(128, 128, 128, 0.05);
+}
+.gfw-consent-policy-meta {
+	opacity: .65;
+	font-size: .9em;
+	margin-top: 2em;
+}
+
+/* Narrow screens: scroll the wide table horizontally instead of squishing */
+@media (max-width: 640px) {
+	.gfw-consent-policy-table {
+		display: block;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+}
 
 /* --------------------------------------------------------------------------
    RESPONSIVE
