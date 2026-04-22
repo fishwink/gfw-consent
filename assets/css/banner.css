@@ -370,10 +370,10 @@
 	width: 44px;
 	height: 44px;
 	border-radius: 50%;
-	background: var(--gfw-primary, #1a1a1a);
-	color: var(--gfw-primary-text, #fff);
-	border: 0;
-	box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.08);
+	background: var(--gfw-bg, #fff);
+	color: var(--gfw-text, #1a1a1a);
+	border: 1px solid var(--gfw-border, #e5e5e5);
+	box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.06);
 	cursor: pointer;
 	display: none;
 	align-items: center;

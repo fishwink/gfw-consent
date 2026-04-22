@@ -254,6 +254,20 @@
 	color: var(--gfw-admin-text);
 	font-size: 14px;
 }
+.gfw-consent-wrap .form-table td > label:has(> input[type="checkbox"]) {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	line-height: 1.5;
+	cursor: pointer;
+}
+.gfw-consent-wrap .form-table td > label:has(> input[type="checkbox"]) > input[type="checkbox"] {
+	margin: 0;
+}
+.gfw-consent-wrap .form-table tr:has(> td > label:only-child > input[type="checkbox"]) th,
+.gfw-consent-wrap .form-table tr:has(> td > label:only-child > input[type="checkbox"]) td {
+	vertical-align: middle;
+}
 .gfw-consent-wrap .description,
 .gfw-consent-wrap p.description {
 	color: var(--gfw-admin-muted);
