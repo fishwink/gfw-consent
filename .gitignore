@@ -3,6 +3,6 @@ __MACOSX/
 *.log
 *.zip
 node_modules/
-vendor/
+/vendor/
 .idea/
 .vscode/

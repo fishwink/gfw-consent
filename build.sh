@@ -14,6 +14,9 @@ cd ..
 rm -f "gfw-consent-${VERSION}.zip"
 zip -r "gfw-consent-${VERSION}.zip" gfw-consent \
   -x "gfw-consent/.git/*" \
+  -x "gfw-consent/.github/*" \
+  -x "gfw-consent/.claude/*" \
+  -x "gfw-consent/.gitignore" \
   -x "gfw-consent/build.sh" \
   -x "*.DS_Store" \
   -x "__MACOSX*"
