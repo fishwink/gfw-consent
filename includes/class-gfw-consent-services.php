@@ -262,26 +262,29 @@ class GFW_Consent_Services {
 			),
 
 			// ---------------------------------------------------------------
-			// EMBEDS (treat as marketing/functional per use)
+			// EMBEDS — categorized as "functional" to match the plugin's
+			// own taxonomy (Functional = maps, chat, embedded content). The
+			// standard YouTube/Vimeo players DO set advertising-profile cookies,
+			// which is disclosed via the Cookie Policy "purpose" / cookies list.
 			// ---------------------------------------------------------------
 			'youtube' => array(
 				'name'      => 'YouTube Embeds',
 				'vendor'    => 'Google LLC',
-				'category'  => 'marketing',
+				'category'  => 'functional',
 				'patterns'  => array( 'youtube.com/embed', 'youtube-nocookie.com/embed' ),
 				'cookies'   => array( 'VISITOR_INFO1_LIVE', 'YSC', 'PREF', 'GPS' ),
 				'privacy'   => 'https://policies.google.com/privacy',
-				'purpose'   => 'Embedded YouTube video player.',
+				'purpose'   => 'Embedded YouTube video player. Standard embeds also set advertising-profile cookies; use youtube-nocookie.com/embed for a privacy-friendlier variant.',
 				'retention' => 'Up to 8 months',
 			),
 			'vimeo' => array(
 				'name'      => 'Vimeo Embeds',
 				'vendor'    => 'Vimeo, Inc.',
-				'category'  => 'marketing',
+				'category'  => 'functional',
 				'patterns'  => array( 'player.vimeo.com' ),
 				'cookies'   => array( 'vuid' ),
 				'privacy'   => 'https://vimeo.com/privacy',
-				'purpose'   => 'Embedded Vimeo video player.',
+				'purpose'   => 'Embedded Vimeo video player. Sets a persistent visitor-identifier cookie.',
 				'retention' => 'Up to 2 years',
 			),
 			'google-maps' => array(

@@ -52,7 +52,6 @@ class GFW_Consent_Policy {
 		ob_start();
 		?>
 		<div class="gfw-consent-policy">
-			<h2><?php esc_html_e( 'Cookie Policy', 'gfw-consent' ); ?></h2>
 			<p><?php
 				printf(
 					/* translators: 1: company name */
