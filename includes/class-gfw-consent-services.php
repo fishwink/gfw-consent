@@ -70,6 +70,11 @@ class GFW_Consent_Services {
 				'name'      => 'Google Analytics 4',
 				'vendor'    => 'Google LLC',
 				'category'  => 'analytics',
+				// consent_mode: true => governed by Google Consent Mode (loads on
+				// every page, gated by the consent signal) instead of being
+				// hard-blocked. Required for cookieless modeling and for US
+				// opt-out behavior. See GFW_Consent_Blocker::build_patterns().
+				'consent_mode' => true,
 				'patterns'  => array( 'googletagmanager.com/gtag/js', 'google-analytics.com/analytics.js', 'google-analytics.com/g/collect' ),
 				'cookies'   => array( '_ga', '_ga_*', '_gid', '_gat*', '_gac_*', '__utm*' ),
 				'privacy'   => 'https://policies.google.com/privacy',
@@ -80,6 +85,11 @@ class GFW_Consent_Services {
 				'name'      => 'Google Tag Manager',
 				'vendor'    => 'Google LLC',
 				'category'  => 'analytics',
+				// Loaded under Consent Mode rather than hard-blocked. NOTE: any
+				// ad/marketing tags fired *inside* the GTM container must be
+				// gated by GTM's own consent settings — the PHP blocker can no
+				// longer stop them once GTM is allowed to load.
+				'consent_mode' => true,
 				'patterns'  => array( 'googletagmanager.com/gtm.js', 'googletagmanager.com/ns.html' ),
 				'cookies'   => array(),
 				'privacy'   => 'https://policies.google.com/privacy',
@@ -249,6 +259,24 @@ class GFW_Consent_Services {
 				'privacy'   => 'https://www.callrail.com/privacy',
 				'purpose'   => 'Phone call tracking and attribution.',
 				'retention' => 'Up to 2 years',
+			),
+			'calltrackingmetrics' => array(
+				'name'      => 'CallTrackingMetrics',
+				'vendor'    => 'CallTrackingMetrics, Inc.',
+				'category'  => 'marketing',
+				// always_load: true => never hard-blocked. CTM's tracker does
+				// not read Google Consent Mode signals, so gating it via the
+				// consent signal would do nothing; the only real options are
+				// hard-block (kills call attribution) or load-and-disclose.
+				// This client relies on call attribution, so it loads by
+				// default and is disclosed in the cookie policy. NOTE: an
+				// opt-out / GPC signal will NOT stop it (it ignores consent).
+				'always_load' => true,
+				'patterns'  => array( 'tctm.co' ),
+				'cookies'   => array( '__ctmid', '__ctm_*', 'ctm_*' ),
+				'privacy'   => 'https://www.calltrackingmetrics.com/privacy-policy/',
+				'purpose'   => 'Dynamic phone-number insertion and call attribution; captures click identifiers (e.g. GCLID) to tie phone calls back to marketing/ad sources.',
+				'retention' => 'Up to 13 months',
 			),
 			'hubspot' => array(
 				'name'      => 'HubSpot',

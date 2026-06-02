@@ -56,9 +56,23 @@ class GFW_Consent_Blocker {
 		// — we still block them until consent so users can decline them in the preferences modal.
 		$categories_to_block[] = 'functional';
 
+		// When Consent Mode v2 is enabled, services flagged 'consent_mode'
+		// (Google Analytics / Google Tag Manager) are NOT hard-blocked. They
+		// load on every page and respond to the gtag consent signal instead.
+		// This is what allows (a) cookieless modeling for denied visitors and
+		// (b) US opt-out behavior where analytics is granted by default.
+		// Non-Google trackers stay hard-blocked regardless.
+		$consent_mode_on = (bool) GFW_Consent_Core::get_setting( 'consent_mode_v2', 1 );
+
 		foreach ( GFW_Consent_Services::catalog() as $key => $svc ) {
 			if ( ! in_array( $svc['category'], $categories_to_block, true ) ) {
 				continue;
+			}
+			if ( ! empty( $svc['always_load'] ) ) {
+				continue; // disclosed in the policy but never hard-blocked (e.g. call tracking that can't read Consent Mode)
+			}
+			if ( $consent_mode_on && ! empty( $svc['consent_mode'] ) ) {
+				continue; // governed by Consent Mode, not hard-blocked
 			}
 			foreach ( $svc['patterns'] as $p ) {
 				$this->patterns[]           = $p;

@@ -74,6 +74,16 @@
 		return cats;
 	}
 
+	// Categories that are ON before any interaction. In opt-out (US) mode this
+	// is analytics-only (per config); in opt-in (EU) mode it is empty.
+	function defaultOnCats() {
+		return (CFG.defaultOn && CFG.defaultOn.length) ? CFG.defaultOn.slice() : [];
+	}
+
+	function isOptout() {
+		return !! CFG.optout;
+	}
+
 	// -------------------------------------------------------------
 	// Script + iframe rehydration
 	// -------------------------------------------------------------
@@ -204,10 +214,10 @@
 		});
 		// Action buttons (use querySelectorAll since each action label may appear in both banner + modal)
 		root.querySelectorAll('[data-gfw-action="accept"]').forEach(function (el) {
-			el.textContent = CFG.texts.accept || '';
+			el.textContent = ( isOptout() && CFG.strings.optout_ack ) ? CFG.strings.optout_ack : (CFG.texts.accept || '');
 		});
 		root.querySelectorAll('[data-gfw-action="reject"]').forEach(function (el) {
-			el.textContent = CFG.texts.reject || '';
+			el.textContent = ( isOptout() && CFG.strings.optout_optout ) ? CFG.strings.optout_optout : (CFG.texts.reject || '');
 		});
 		var prefBtn = root.querySelector('.gfw-consent__banner [data-gfw-action="preferences"]');
 		if ( prefBtn ) prefBtn.textContent = CFG.texts.preferences || '';
@@ -285,18 +295,33 @@
 	// -------------------------------------------------------------
 
 	function handleAction(action) {
-		var existing = loadState() || { id: uuid(), c: [] };
+		var existing = loadState() || { id: uuid(), c: isOptout() ? defaultOnCats() : [] };
 		var state;
 		var inModal = root.getAttribute('data-state') === 'modal';
 
 		if ( action === 'accept' ) {
-			state = { id: existing.id, c: allCategories() };
-			saveState(state);
-			logConsent('accept', state);
-			applyConsent(state);
-			hideAll();
-			showFab();
-			showToast(CFG.strings.toast_accept);
+			if ( isOptout() ) {
+				// "Got it" — confirm the opt-out defaults. Grant the analytics
+				// consent SIGNAL (so GA4 measurement is counted) but do NOT
+				// auto-restore other hard-blocked analytics scripts (e.g.
+				// session-replay tools). Those require an explicit opt-in via
+				// the preferences modal. Advertising stays denied.
+				state = { id: existing.id, c: defaultOnCats() };
+				saveState(state);
+				logConsent('accept', state);
+				applyConsentSignal(state);
+				hideAll();
+				showFab();
+				showToast(CFG.strings.toast_custom);
+			} else {
+				state = { id: existing.id, c: allCategories() };
+				saveState(state);
+				logConsent('accept', state);
+				applyConsent(state);
+				hideAll();
+				showFab();
+				showToast(CFG.strings.toast_accept);
+			}
 		} else if ( action === 'reject' ) {
 			state = { id: existing.id, c: [] };
 			saveState(state);
@@ -304,7 +329,7 @@
 			applyConsent(state);
 			hideAll();
 			showFab();
-			showToast(CFG.strings.toast_reject);
+			showToast( isOptout() ? CFG.strings.toast_optout : CFG.strings.toast_reject );
 		} else if ( action === 'preferences' ) {
 			buildCategories(existing);
 			showModal();
@@ -335,6 +360,14 @@
 		pushConsentModeUpdate(state);
 		restoreScripts(state);
 		restoreIframes(state);
+		document.dispatchEvent(new CustomEvent('gfw:consent', { detail: state }));
+	}
+
+	// Push only the Consent Mode signal, without rehydrating hard-blocked
+	// scripts/iframes. Used for the opt-out default ("analytics granted" for
+	// GA4 measurement) so heavier blocked tools stay opt-in.
+	function applyConsentSignal(state) {
+		pushConsentModeUpdate(state);
 		document.dispatchEvent(new CustomEvent('gfw:consent', { detail: state }));
 	}
 
@@ -388,7 +421,8 @@
 
 		var state = loadState();
 
-		// GPC takes precedence over absence of consent — auto-reject silently
+		// GPC is an opt-out signal and takes precedence in BOTH modes —
+		// silently deny everything (incl. analytics) and record it.
 		if ( ! state && gpcActive() ) {
 			var auto = { id: uuid(), c: [] };
 			saveState(auto);
@@ -403,7 +437,18 @@
 			applyConsent(state);
 			hideAll();
 			showFab();
+			return;
+		}
+
+		// No stored decision and no GPC.
+		if ( isOptout() ) {
+			// US opt-out: analytics is already granted by the server-rendered
+			// Consent Mode default and GA4 loads normally, so we don't withhold
+			// anything — we just present a dismissible notice. Heavier blocked
+			// analytics/marketing scripts remain blocked until explicit opt-in.
+			showBanner();
 		} else {
+			// EU/UK opt-in: gate until the visitor decides.
 			showBanner();
 		}
 	}

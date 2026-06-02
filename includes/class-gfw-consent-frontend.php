@@ -46,7 +46,7 @@ class GFW_Consent_Frontend {
 	 * Generate honest default banner body text based on which categories
 	 * are actually enabled. Admins can override via Settings.
 	 */
-	public static function get_smart_body_text() {
+	public static function get_smart_body_text( $optout = false ) {
 		$s    = get_option( GFW_CONSENT_OPT_KEY, array() );
 		$bits = array();
 
@@ -74,6 +74,14 @@ class GFW_Consent_Frontend {
 			$list = implode( ', ', $bits ) . ', ' . __( 'and', 'gfw-consent' ) . ' ' . $last;
 		}
 
+		if ( $optout ) {
+			return sprintf(
+				/* translators: %s: human-readable list of purposes */
+				__( 'We use cookies to %s. Analytics is on by default — you can opt out or manage your preferences at any time.', 'gfw-consent' ),
+				$list
+			);
+		}
+
 		return sprintf(
 			/* translators: %s: human-readable list of purposes, e.g. "analyze traffic and measure ads" */
 			__( 'We use cookies to %s. You can accept, reject non-essential, or manage your preferences.', 'gfw-consent' ),
@@ -82,9 +90,59 @@ class GFW_Consent_Frontend {
 	}
 
 	/**
-	 * Google Consent Mode v2 defaults — DENIED until user acts.
-	 * This runs before any gtag script. It must exist even if gtag
-	 * is never loaded (harmless if not).
+	 * Whether the current site/visitor is in OPT-OUT (US-style) mode, where
+	 * analytics is allowed by default and the banner is a dismissible notice,
+	 * vs OPT-IN (EU/UK) mode, where everything is denied until consent.
+	 *
+	 *   jurisdiction_mode = 'us'   -> always opt-out
+	 *   jurisdiction_mode = 'eu'   -> always opt-in
+	 *   jurisdiction_mode = 'auto' -> per-request (Cloudflare country header);
+	 *                                 falls back to opt-out when country is
+	 *                                 unknown / not behind Cloudflare.
+	 *
+	 * CACHING NOTE: in 'auto' mode this varies per request, which is not
+	 * full-page-cache safe on mixed EU/US sites. For US-only sites it always
+	 * resolves to opt-out, so it is cache-safe. Mixed-audience sites should
+	 * pin jurisdiction_mode or exclude the consent default block from cache.
+	 */
+	public static function is_optout_mode() {
+		$mode = GFW_Consent_Core::get_setting( 'jurisdiction_mode', 'auto' );
+		if ( 'us' === $mode ) {
+			return true;
+		}
+		if ( 'eu' === $mode ) {
+			return false;
+		}
+		// auto
+		$country = '';
+		if ( ! empty( $_SERVER['HTTP_CF_IPCOUNTRY'] ) ) {
+			$country = strtoupper( substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_IPCOUNTRY'] ) ), 0, 2 ) );
+		}
+		$eu = array(
+			'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT',
+			'LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB',
+		);
+		// EU/UK visitor -> opt-in. Everything else (incl. unknown) -> opt-out.
+		return ! ( $country && in_array( $country, $eu, true ) );
+	}
+
+	/**
+	 * Best-effort server-side Global Privacy Control detection via the
+	 * Sec-GPC request header. Used to keep analytics denied-by-default for a
+	 * GPC visitor even in opt-out mode (the JS layer also enforces this).
+	 */
+	public static function gpc_header_active() {
+		if ( ! GFW_Consent_Core::get_setting( 'honor_gpc', 1 ) ) {
+			return false;
+		}
+		return isset( $_SERVER['HTTP_SEC_GPC'] ) && '1' === (string) $_SERVER['HTTP_SEC_GPC'];
+	}
+
+	/**
+	 * Google Consent Mode v2 defaults. Runs before any gtag script.
+	 * Analytics is denied by default in opt-in mode and granted by default in
+	 * opt-out mode (unless GPC / analytics disabled). Advertising is always
+	 * denied by default. Harmless if gtag is never loaded.
 	 */
 	public function consent_mode_defaults() {
 		if ( GFW_Consent_Core::is_editor_context() ) {
@@ -93,6 +151,15 @@ class GFW_Consent_Frontend {
 		if ( ! GFW_Consent_Core::get_setting( 'consent_mode_v2', 1 ) ) {
 			return;
 		}
+
+		// In opt-out (US) mode, analytics is granted by default unless the
+		// visitor sends a GPC opt-out signal or analytics is disabled in
+		// settings. Advertising/functional stay denied by default in all
+		// modes (advertising remains opt-in per configuration).
+		$optout            = self::is_optout_mode();
+		$analytics_enabled = (bool) GFW_Consent_Core::get_setting( 'cat_analytics', 1 );
+		$gpc               = self::gpc_header_active();
+		$analytics_default = ( $optout && $analytics_enabled && ! $gpc ) ? 'granted' : 'denied';
 		?>
 		<!-- GFW Consent: Google Consent Mode v2 defaults -->
 		<script data-gfw-consent-mode="1">
@@ -102,7 +169,7 @@ class GFW_Consent_Frontend {
 				'ad_storage':            'denied',
 				'ad_user_data':          'denied',
 				'ad_personalization':    'denied',
-				'analytics_storage':     'denied',
+				'analytics_storage':     '<?php echo esc_js( $analytics_default ); ?>',
 				'functionality_storage': 'denied',
 				'personalization_storage':'denied',
 				'security_storage':      'granted',
@@ -179,6 +246,11 @@ class GFW_Consent_Frontend {
 			'honorGpc'       => ! empty( $s['honor_gpc'] ) ? 1 : 0,
 			'rejectEquals'   => ! empty( $s['reject_equals_accept'] ) ? 1 : 0,
 			'jurisdiction'   => $this->detect_jurisdiction(),
+			// Opt-out (US) mode: analytics granted by default, banner is a
+			// dismissible notice. defaultOn lists the categories that are ON
+			// before any visitor interaction (analytics only, per config).
+			'optout'         => self::is_optout_mode() ? 1 : 0,
+			'defaultOn'      => ( self::is_optout_mode() && ! empty( $s['cat_analytics'] ) ) ? array( 'analytics' ) : array(),
 			'layout'         => isset( $s['brand_layout'] ) ? $s['brand_layout'] : 'bar',
 			'position'       => isset( $s['brand_position'] ) ? $s['brand_position'] : 'bottom',
 			'categories'     => array(
@@ -202,10 +274,14 @@ class GFW_Consent_Frontend {
 				'toast_accept'        => __( 'All cookies accepted', 'gfw-consent' ),
 				'toast_reject'        => __( 'Non-essential cookies rejected', 'gfw-consent' ),
 				'toast_custom'        => __( 'Preferences saved', 'gfw-consent' ),
+				// Opt-out (US notice) mode labels.
+				'optout_ack'          => __( 'Got it', 'gfw-consent' ),
+				'optout_optout'       => __( 'Opt out', 'gfw-consent' ),
+				'toast_optout'        => __( 'Analytics opt-out saved', 'gfw-consent' ),
 			),
 			'texts'          => array(
 				'title'       => isset( $s['banner_title'] ) ? $s['banner_title'] : '',
-				'body'        => ! empty( $s['banner_body'] ) ? $s['banner_body'] : self::get_smart_body_text(),
+				'body'        => ! empty( $s['banner_body'] ) ? $s['banner_body'] : self::get_smart_body_text( self::is_optout_mode() ),
 				'accept'      => isset( $s['btn_accept'] ) ? $s['btn_accept'] : '',
 				'reject'      => isset( $s['btn_reject'] ) ? $s['btn_reject'] : '',
 				'preferences' => isset( $s['btn_preferences'] ) ? $s['btn_preferences'] : '',
